@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>EverTask — Study plans that build themselves</title>
+<link rel="icon" href="assets/logo.png"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#050914;--panel:#081226;--teal:#12bfae;--cyan:#2dd4ff;--text:#edf6ff;--muted:#8fa5c3;--line:rgba(255,255,255,.1);--glass:rgba(255,255,255,.055);--ease:cubic-bezier(.22,1,.36,1)}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(900px 480px at 85% -10%,rgba(18,191,174,.16),transparent 60%),var(--bg);color:var(--text);min-height:100dvh}
+button{font-family:inherit;cursor:pointer;color:inherit}
+input,select,textarea{font-family:inherit}
+img.logoimg{background:#fff;border-radius:22%;object-fit:contain;padding:4px}
+
+/* ---------- LANDING ---------- */
+#landing{min-height:100dvh;display:flex;flex-direction:column}
+.ld-wrap{max-width:1020px;width:100%;margin:auto;padding:22px 20px 56px;text-align:center}
+.ld-nav{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;gap:10px;align-items:center;font-weight:800;font-size:1.05rem}
+.brand img{width:40px;height:40px}
+.ld-hero{width:84px;height:84px;margin-top:46px;box-shadow:0 22px 55px rgba(18,191,174,.3)}
+#landing h1{font-size:clamp(2rem,5.5vw,3.3rem);line-height:1.1;letter-spacing:-.02em;max-width:740px;margin:20px auto 13px}
+#landing h1 em{font-style:normal;color:var(--teal)}
+.ld-sub{color:var(--muted);max-width:540px;margin:auto;line-height:1.7}
+.btn{display:inline-block;padding:14px 26px;border-radius:14px;border:0;font-weight:800;font-size:.97rem;background:linear-gradient(135deg,var(--teal),#079bc7);color:#02141a;transition:transform .2s,box-shadow .2s}
+.btn:hover{box-shadow:0 12px 30px rgba(18,191,174,.35)}
+.btn.ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--line);box-shadow:none}
+.ld-cta{display:flex;gap:11px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.ld-small{color:var(--muted);font-size:.8rem;margin-top:11px}
+.ld-demo{max-width:700px;margin:38px auto 0;border:1px solid rgba(18,191,174,.35);border-radius:22px;background:rgba(255,255,255,.045);padding:18px;text-align:left;position:relative;overflow:hidden}
+.ld-demo h3{font-size:.72rem;letter-spacing:.12em;color:#7ef0df}
+.ld-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.ld-dow{font-size:.58rem;text-align:center;color:var(--muted);font-weight:800}
+.ld-cell{min-height:52px;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:5px;font-size:.62rem;font-weight:700;color:#dffcf6;background:rgba(255,255,255,.03)}
+.ld-cell b{display:block;color:#cfe3ff}
+.ld-cell.today{border-color:rgba(18,191,174,.85);background:rgba(18,191,174,.12)}
+.ld-note{position:absolute;left:5%;bottom:12px;width:190px;background:rgba(10,40,50,.94);border:1.5px dashed rgba(18,191,174,.75);border-radius:13px;padding:9px 11px;font-size:.68rem;font-weight:700;z-index:3;animation:ldfly 5.2s cubic-bezier(.22,1,.36,1) infinite}
+@keyframes ldfly{0%,20%{transform:translate(0,0) scale(1);opacity:0}26%{opacity:1}58%{transform:translate(215px,-140px) scale(.52) rotate(-2deg);opacity:1}66%,100%{transform:translate(215px,-140px) scale(.3);opacity:0}}
+.ld-stamp{position:absolute;top:36%;left:47%;font-size:.6rem;font-weight:900;color:#03201c;background:var(--teal);padding:5px 8px;border-radius:8px;z-index:4;animation:ldstamp 5.2s ease infinite}
+@keyframes ldstamp{0%,62%{opacity:0;transform:scale(1.6) rotate(-8deg)}70%,92%{opacity:1;transform:scale(1) rotate(-4deg)}100%{opacity:0}}
+.ld-cursor{position:absolute;width:22px;z-index:5;pointer-events:none;animation:ldcur 5.2s cubic-bezier(.22,1,.36,1) infinite}
+@keyframes ldcur{0%{left:3%;top:80%;opacity:0}10%{opacity:1}30%{left:15%;top:72%}58%{left:46%;top:30%}78%,100%{left:51%;top:36%;opacity:1}}
+.ld-feats{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:34px;text-align:left}
+@media(max-width:720px){.ld-feats{grid-template-columns:1fr}}
+.ld-feat{padding:20px;border:1px solid var(--line);border-radius:19px;background:rgba(255,255,255,.04)}
+.ld-feat p{color:var(--muted);font-size:.88rem;line-height:1.6}.ld-feat h4{margin:7px 0 5px}
+
+/* ---------- APP SHELL ---------- */
+#app{display:none;height:100dvh}
+#app.on{display:flex}
+aside{width:262px;flex:0 0 262px;background:rgba(4,9,22,.92);border-right:1px solid var(--line);padding:14px 11px;display:flex;flex-direction:column;gap:10px;z-index:30}
+aside .brand{padding:2px 4px 11px;border-bottom:1px solid var(--line)}
+aside .brand img{width:40px;height:40px}
+aside .brand small{display:block;color:var(--muted);font-weight:500;font-size:.64rem;letter-spacing:.08em}
+.newchat{padding:11px;border-radius:12px;border:1px solid rgba(18,191,174,.45);background:rgba(18,191,174,.16);font-weight:800;text-align:left;width:100%}
+.side-label{font-size:.65rem;letter-spacing:.13em;color:var(--muted);font-weight:800;padding:2px 5px}
+#chatList{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;min-height:50px}
+.chat-item{padding:9px 10px;border-radius:10px;color:#c8d7ee;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.chat-item:hover,.chat-item.active{background:var(--glass)}
+.side-btn{padding:10px 11px;border-radius:12px;background:var(--glass);border:1px solid var(--line);text-align:left;font-weight:700;font-size:.84rem;width:100%}
+.side-btn small{display:block;color:var(--muted);font-weight:500;margin-top:2px;font-size:.74rem}
+.pill{font-size:.74rem;padding:8px 10px;border-radius:10px;background:rgba(18,191,174,.09);border:1px solid rgba(18,191,174,.25);color:#8ff3e4;line-height:1.5}
+main{flex:1;min-width:0;display:flex;flex-direction:column;height:100dvh}
+.topbar{min-height:56px;display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:rgba(5,10,24,.85);flex-wrap:wrap}
+.iconbtn{width:38px;height:38px;border-radius:11px;background:var(--glass);border:1px solid var(--line);font-size:1rem;flex:0 0 auto}
+.viewtabs{display:flex;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:13px;padding:3px;gap:2px}
+.viewtabs button{border:0;background:transparent;padding:8px 12px;border-radius:10px;font-weight:700;font-size:.82rem;color:var(--muted);white-space:nowrap}
+.viewtabs button.on{background:rgba(18,191,174,.28);color:#fff}
+.ghostbtn{padding:9px 12px;border-radius:11px;background:var(--glass);border:1px solid var(--line);font-weight:700;font-size:.83rem;white-space:nowrap}
+#messages{flex:1;overflow-y:auto;padding:22px 16px}
+.col{max-width:800px;margin:auto;display:flex;flex-direction:column;gap:18px}
+.welcome{text-align:center;margin:auto;max-width:640px;padding:26px 0}
+.welcome img{width:76px;height:76px;box-shadow:0 18px 44px rgba(18,191,174,.25)}
+.welcome h1{font-size:clamp(1.5rem,4vw,2rem);margin:15px 0 8px}
+.welcome p{color:var(--muted);line-height:1.7;font-size:.94rem}
+.row{display:flex;gap:11px}
+.row.user{flex-direction:row-reverse}
+.avatar{width:33px;height:33px;flex:0 0 33px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:.7rem;background:#24365e;overflow:hidden}
+.avatar.bot{background:#fff}.avatar.bot img{width:100%;height:100%;object-fit:contain;padding:3px}
+.bubble{padding:12px 15px;border-radius:17px;line-height:1.62;font-size:.93rem;white-space:pre-wrap;word-break:break-word;max-width:min(660px,calc(100% - 46px))}
+.user .bubble{background:rgba(18,191,174,.2);border:1px solid rgba(18,191,174,.32);border-top-right-radius:5px}
+.bot .bubble{background:rgba(255,255,255,.045);border:1px solid var(--line);border-top-left-radius:5px}
+.bubble table{border-collapse:collapse;margin:8px 0;font-size:.78rem;width:100%}
+.bubble th,.bubble td{border:1px solid rgba(255,255,255,.18);padding:5px 7px;text-align:left}
+.bubble th{background:rgba(18,191,174,.18)}
+.md-h{font-weight:800;margin:8px 0 3px}
+.md-li{margin:2px 0 2px 14px}
+.md-hr{border:0;border-top:1px solid rgba(255,255,255,.18);margin:9px 0}
+.tool{color:#7ef0df;font-size:.82rem;display:flex;gap:8px;align-items:center}
+.spin{width:14px;height:14px;border:2px solid rgba(18,191,174,.3);border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite;flex:0 0 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#examples{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:820px;margin:0 auto 10px}
+#examples button{padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:.82rem;font-weight:600}
+#examples button:hover{border-color:var(--teal)}
+.composer-wrap{padding:4px 14px calc(12px + env(safe-area-inset-bottom))}
+.cbox{max-width:820px;margin:auto;display:flex;gap:8px;align-items:flex-end;background:#0b1a33;border:1px solid var(--line);border-radius:19px;padding:8px}
+.cbox:focus-within{border-color:rgba(18,191,174,.65)}
+.cbox textarea{flex:1;resize:none;max-height:130px;background:transparent;border:0;outline:0;color:#fff;padding:9px;font-size:.95rem;line-height:1.5;min-width:0}
+.sendbtn{width:42px;height:42px;flex:0 0 42px;border:0;border-radius:13px;background:linear-gradient(135deg,var(--teal),#0788ad);color:#02151b;font-size:1.05rem;font-weight:900}
+.hint{text-align:center;color:var(--muted);font-size:.7rem;margin-top:7px}
+
+/* ---------- ARTIFACT PANEL ---------- */
+#scrim{position:fixed;inset:0;background:rgba(2,5,14,.55);opacity:0;pointer-events:none;transition:opacity .3s;z-index:40}
+#scrim.on{opacity:1;pointer-events:auto}
+#artifact{position:fixed;top:0;right:0;bottom:0;width:min(580px,96vw);z-index:50;background:#060d1f;border-left:1px solid rgba(18,191,174,.3);display:flex;flex-direction:column;transform:translateX(103%);transition:transform .45s var(--ease);box-shadow:-30px 0 80px rgba(0,0,0,.5)}
+#artifact.open{transform:none}
+.art-head{padding:13px 14px;border-bottom:1px solid var(--line);display:flex;gap:9px;align-items:center;background:linear-gradient(120deg,rgba(18,191,174,.2),transparent 60%)}
+.art-head b{font-size:1rem}.art-head small{display:block;color:var(--muted);font-size:.75rem}
+.live-dot{width:9px;height:9px;border-radius:50%;background:#ff5470;animation:blinkdot 1.2s infinite}
+@keyframes blinkdot{50%{opacity:.3}}
+.art-tabs{display:flex;gap:5px;padding:9px 12px;border-bottom:1px solid var(--line);overflow-x:auto}
+.art-tabs button{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--glass);font-size:.8rem;font-weight:700;white-space:nowrap}
+.art-tabs button.on{border-color:var(--teal);color:#7ef0df;background:rgba(18,191,174,.12)}
+.art-view{flex:1;overflow-y:auto;display:none;padding:16px}
+.art-view.on{display:block}
+#buildLog{font-size:.79rem;display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.step{color:var(--muted);display:flex;gap:8px;align-items:center}.step.done{color:#a9f2e6}
+.plan-hero{padding:18px;border-radius:20px;background:linear-gradient(140deg,rgba(18,191,174,.27),rgba(45,212,255,.07));border:1px solid rgba(18,191,174,.35)}
+.plan-hero h2{font-size:1.28rem;line-height:1.3;margin-top:5px}.plan-hero p{color:#b8d2ea;font-size:.83rem;line-height:1.6;margin-top:6px}
+.plan-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.pstat{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
+.pstat b{display:block}.pstat span{font-size:.62rem;color:var(--muted)}
+.progress{height:10px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--cyan));transition:width .4s var(--ease)}
+.badge{display:inline-block;padding:3px 8px;border-radius:99px;font-size:.64rem;font-weight:800}
+.b-easy{background:rgba(46,224,171,.14);color:#5ff0c0}.b-med{background:rgba(255,205,84,.13);color:#ffd98a}.b-hard{background:rgba(255,110,140,.13);color:#ff9db1}
+.calWrap{margin-top:14px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.04);padding:15px;transform-origin:top center}
+.calWrap.roll{animation:roll .8s var(--ease)}
+@keyframes roll{from{transform:rotateX(-55deg);opacity:0}to{transform:none;opacity:1}}
+.calHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;gap:8px;flex-wrap:wrap}
+.calHead b{font-size:1rem}.calHead span{color:var(--teal);font-size:.72rem;font-weight:800}
+.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.calDow{text-align:center;font-size:.6rem;letter-spacing:.08em;color:var(--muted);font-weight:800;padding:3px 0}
+.calCell{min-height:72px;border-radius:13px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);padding:6px;position:relative;overflow:hidden}
+.calCell .dnum{font-size:.72rem;font-weight:800;color:#cfe3ff}
+.calCell.dim{opacity:.25}.calCell.today{border-color:rgba(18,191,174,.7)}
+.calCell.filled{cursor:pointer;background:rgba(18,191,174,.16);border-color:rgba(18,191,174,.42)}
+.calCell.sel{outline:2px solid var(--teal);outline-offset:1px}
+.calCell .ct{font-size:.59rem;line-height:1.35;color:#dffcf6;font-weight:700;margin-top:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.calCell .cx{font-size:.57rem;color:#7ef0df;font-weight:800;margin-top:2px}
+#writerStage{margin-top:13px;min-height:10px}
+.draft{border:1.5px dashed rgba(18,191,174,.55);background:rgba(18,191,174,.09);border-radius:18px;padding:14px}
+.draft b{font-size:.95rem}.draft .dl{color:var(--muted);font-size:.8rem;line-height:1.6;margin-top:5px;white-space:pre-wrap}
+.draft .tag{font-size:.64rem;letter-spacing:.12em;color:#7ef0df;font-weight:900}
+.dayDetail{margin-top:13px}
+.day{margin-top:12px;padding:15px;border-radius:18px;background:var(--glass);border:1px solid var(--line);border-left:4px solid var(--teal)}
+.day small{color:var(--teal);font-weight:800;font-size:.68rem;letter-spacing:.05em}
+.chap{font-weight:800;margin-top:4px;line-height:1.45}
+.slot{display:flex;gap:10px;align-items:flex-start;padding:10px;margin-top:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;font-size:.83rem;line-height:1.5;cursor:pointer}
+.slot input{width:18px;height:18px;margin-top:1px;accent-color:var(--teal);flex:0 0 18px}
+.slot.done{opacity:.55}.slot.done .st{text-decoration:line-through}
+.slot small{display:block;color:var(--muted)}
+.motive{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(18,191,174,.08);border:1px dashed rgba(18,191,174,.35);font-size:.82rem;color:#bdf5ec;line-height:1.55}
+.xp{color:#7ef0df;font-weight:800;font-size:.72rem}
+.art-card{margin:0 0 12px;padding:15px;border-radius:16px;background:var(--glass);border:1px solid var(--line);cursor:pointer}
+.art-card b{font-size:.95rem}.art-card p{color:var(--muted);font-size:.8rem;line-height:1.55;margin-top:4px}
+.art-card .rowb{display:flex;gap:7px;margin-top:10px}
+.art-card button{padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:.76rem;font-weight:700}
+.art-actions{display:flex;gap:7px;padding:11px 13px;border-top:1px solid var(--line)}
+.art-actions button{flex:1;padding:11px 6px;border-radius:11px;border:1px solid var(--line);background:var(--glass);font-weight:800;font-size:.8rem}
+.art-actions button:first-child{background:var(--teal);color:#02161c;border:0}
+/* bot cursor */
+#botCursor{position:absolute;z-index:120;left:0;top:0;pointer-events:none;opacity:0;transition:transform .5s var(--ease),opacity .3s}
+#botCursor.show{opacity:1}
+#botCursor .tag{display:inline-flex;margin-left:16px;background:linear-gradient(135deg,var(--teal),#079bc7);color:#02161c;font-size:.66rem;font-weight:900;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.ripple{position:absolute;z-index:119;width:12px;height:12px;border-radius:50%;border:2px solid var(--teal);pointer-events:none;animation:rip .55s var(--ease) forwards}
+@keyframes rip{to{width:46px;height:46px;opacity:0;transform:translate(-17px,-17px)}}
+
+/* ---------- DESKMATE ---------- */
+#deskmate{position:fixed;z-index:65;right:104px;bottom:104px;width:88px;text-align:center;cursor:pointer;user-select:none;display:none}
+#app.on ~ #deskmate{display:block}
+#mateEmoji{font-size:3.6rem;line-height:1;filter:drop-shadow(0 12px 14px rgba(0,0,0,.4))}
+#mateBubble{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#fff;color:#10203c;font-size:.7rem;font-weight:700;line-height:1.4;padding:7px 10px;border-radius:13px;max-width:180px;width:max-content;opacity:0;pointer-events:none;transition:opacity .3s;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+#mateBubble.show{opacity:1}
+.mateGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.mateCard{padding:12px 6px;border-radius:16px;background:rgba(255,255,255,.05);border:2px solid var(--line);text-align:center;cursor:pointer;font-size:1.9rem}
+.mateCard span{display:block;font-size:.72rem;font-weight:800;margin-top:3px}
+.mateCard.sel{border-color:var(--teal);background:rgba(18,191,174,.13)}
+.teachBox{padding:4px 2px 18px}
+.teachBox h3{margin-bottom:6px}.teachBox p{color:var(--muted);font-size:.85rem;line-height:1.6}
+.teachBox textarea,.teachBox input,.teachBox select{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:13px;color:#fff;padding:12px;outline:none;margin-top:8px}
+.teachBox select option{color:#111}
+.micbtn{width:100%;padding:13px;border-radius:14px;border:0;background:linear-gradient(135deg,#ff7aa2,#c94f7c);color:#fff;font-weight:900;margin-top:10px}
+.fbCard{margin-top:12px;padding:14px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);line-height:1.65;font-size:.87rem;white-space:pre-wrap}
+.scoreRing{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;margin:8px auto}
+.scoreRing i{width:58px;height:58px;border-radius:50%;background:#0a1830;display:grid;place-items:center;font-style:normal;font-weight:900}
+
+/* ---------- MODALS / ONBOARDING ---------- */
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(3,7,18,.78);display:none;place-items:center;padding:16px}
+.overlay.open{display:grid}
+.modalCard{width:min(480px,100%);background:linear-gradient(165deg,#0d1e3d,#071228);border:1px solid rgba(18,191,174,.35);border-radius:26px;padding:28px;max-height:92dvh;overflow-y:auto}
+.modalCard img{width:70px;height:70px}
+.modalCard h2{font-size:1.45rem;margin:13px 0 8px;line-height:1.25}
+.modalCard p{color:var(--muted);line-height:1.65;font-size:.92rem}
+.dots{display:flex;gap:7px;margin:18px 0}
+.dots i{width:8px;height:8px;border-radius:99px;background:rgba(255,255,255,.18)}
+.dots i.on{width:26px;background:var(--teal)}
+.ob-nav{display:flex;gap:9px;margin-top:6px}
+.ob-nav button{flex:1;padding:13px;border-radius:14px;border:1px solid var(--line);background:var(--glass);font-weight:800}
+.ob-nav button.primary{background:linear-gradient(135deg,var(--teal),#079bc7);color:#02141a;border:0}
+.field{margin-top:13px}.field label{font-size:.74rem;font-weight:800;color:#aee9ff}
+.field input,.field select{width:100%;margin-top:6px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:13px;color:#fff;padding:12px;outline:none}
+.field select option{color:#111}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);background:#0e2a3f;color:#d9fff7;border:1px solid rgba(18,191,174,.55);padding:12px 18px;border-radius:14px;font-weight:700;font-size:.87rem;z-index:300;opacity:0;pointer-events:none;transition:.3s var(--ease)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.gearbtn{position:fixed;left:14px;bottom:14px;z-index:66;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);opacity:.6}
+@media(max-width:820px){
+  aside{position:fixed;top:0;bottom:0;left:0;transform:translateX(-105%);transition:transform .35s var(--ease);box-shadow:30px 0 60px rgba(0,0,0,.5)}
+  aside.open{transform:none}
+  .viewtabs button{padding:8px 9px;font-size:.76rem}
+  #deskmate{right:16px;bottom:96px;width:70px}#mateEmoji{font-size:2.8rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= LANDING ================= -->
+<div id="landing">
+  <div class="ld-wrap">
+    <div class="ld-nav">
+      <span class="brand"><img class="logoimg" src="assets/logo.png" alt=""> EverTask</span>
+      <button class="btn ghost" onclick="enterApp()">Open App →</button>
+    </div>
+    <img class="logoimg ld-hero" src="assets/logo.png" alt="EverTask">
+    <h1>Study plans that <em>build themselves</em>, live on your calendar.</h1>
+    <p class="ld-sub">Tell Ever your class, subject and days. It finds your real textbook chapters, writes each day's plan, and slams it onto your calendar — while your deskmate cheers you on.</p>
+    <div class="ld-cta"><button class="btn" onclick="enterApp()">🚀 Launch EverTask</button></div>
+    <div class="ld-small">Free to try • Works right here in this page • Plans save on your device</div>
+    <div class="ld-small" id="selfTest" style="color:#7ef0df;font-weight:700">⏳ Checking this page…</div>
+    <div class="ld-small">Clean MVP • Build 12</div>
+    <div class="ld-demo">
+      <h3>● LIVE — HOW A PLAN IS BUILT • <span id="ldTitle"></span></h3>
+      <div class="ld-cal" id="ldCal"></div>
+      <div class="ld-note">✍️ Day 3 — Electricity<br>Learn • Practice • Revise</div>
+      <svg class="ld-cursor" viewBox="0 0 24 24"><path d="M4 2 L20 12 L12.5 13.5 L9 21 Z" fill="#12bfae" stroke="#eafffb" stroke-width="1.4"/></svg>
+      <div class="ld-stamp">📌 SLAMMED IN!</div>
+      <div style="position:absolute;right:14px;bottom:8px;font-size:1.8rem">🧸</div>
+    </div>
+    <div class="ld-feats">
+      <div class="ld-feat"><div style="font-size:1.35rem">🗓️</div><h4>Calendar Planner</h4><p>Real NCERT chapters for Classes 9–12 mapped day-by-day with time slots, difficulty and XP.</p></div>
+      <div class="ld-feat"><div style="font-size:1.35rem">🧸</div><h4>Your Deskmate</h4><p>A plushie buddy you pick and name — it sits with you while you study and learn.</p></div>
+      <div class="ld-feat"><div style="font-size:1.35rem">🎓</div><h4>Teach to Learn</h4><p>Teach your deskmate aloud. It transcribes you, praises, catches mistakes, and questions you back.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <aside id="sidebar">
+    <div class="brand"><img class="logoimg" src="assets/logo.png" alt=""><div>Ever<span style="color:var(--teal)">Task</span><small>AI PLANNER WORKSPACE</small></div></div>
+    <button class="newchat" onclick="newChat()">＋ New chat</button>
+    <div class="side-label">RECENT</div>
+    <div id="chatList"></div>
+    <button class="side-btn" onclick="openPlannerTab()">📅 Live Planner<small>Watch plans build on the calendar</small></button>
+    <button class="side-btn" onclick="openArtifactsTab()">🧩 My Artifacts<small id="artCount">No artifacts yet</small></button>
+    <button class="side-btn" onclick="openTeachTab()">🧸 Teach Your Deskmate<small>Explain it aloud — learn deeper</small></button>
+    <button class="side-btn" onclick="playDemo()">▶️ Play Planner Animation<small>Demo: write → fly → slam</small></button>
+    <button class="side-btn" onclick="openSettings()">🔑 API Key<small id="apiSideLabel">Enter NVIDIA NIM API key</small></button>
+    <button class="side-btn" onclick="openOnboarding()">👋 Welcome Tour<small>Intro & deskmate picker</small></button>
+    <div class="pill" id="clock">🕒 …</div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <button class="iconbtn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+      <div class="viewtabs">
+        <button class="on" id="vtChat" onclick="closeArtifact()">💬 Chat</button>
+        <button id="vtPlanner" onclick="openPlannerTab()">📅 Planner</button>
+        <button id="vtArt" onclick="openArtifactsTab()">🧩 Artifacts</button>
+        <button id="vtTeach" onclick="openTeachTab()">🧸 Teach</button>
+      </div>
+      <span style="flex:1"></span>
+      <span class="pill">✦ Ever AI</span>
+      <button class="ghostbtn" id="apiKeyBtn" onclick="openSettings()">🔑 API Key</button>
+    </div>
+
+    <div id="messages"><div class="col" id="msgCol"></div></div>
+
+    <div class="composer-wrap">
+      <div id="examples">
+        <button data-q="Make a 7-day study plan for Class 10 Science NCERT, 2 hours per day" onclick="quick(this.dataset.q)">📅 7-day Class 10 Science</button>
+        <button data-q="Make a 10-day study plan for Class 10 Maths NCERT, 2 hours per day" onclick="quick(this.dataset.q)">🧮 10-day Maths sprint</button>
+        <button data-q="Make a 5-day plan for Class 12 Physics NCERT, 3 hours per day" onclick="quick(this.dataset.q)">⚛️ 5-day Physics intensive</button>
+        <button data-q="Make a 7-day study plan for Class 9 Science NCERT, 1 hour per day" onclick="quick(this.dataset.q)">🌱 7-day Class 9 Science</button>
+      </div>
+      <div class="cbox">
+        <textarea id="input" rows="1" placeholder="Message Ever… e.g. Make a 7-day plan for Class 10 Science, 2 hrs/day"></textarea>
+        <button class="sendbtn" onclick="send()" aria-label="Send">➤</button>
+      </div>
+      <div class="hint">Enter to send • Your plans save automatically on this device</div>
+    </div>
+  </main>
+</div>
+
+<div id="deskmate" onclick="mateClick()">
+  <div id="mateBubble"></div>
+  <div id="mateEmoji">🐼</div>
+  <div style="font-size:.62rem;font-weight:800;color:#9be9db" id="mateNameTag">Chotu</div>
+</div>
+
+<div id="scrim" onclick="closeArtifact()"></div>
+<section id="artifact">
+  <div id="botCursor"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M4 2 L20 12 L12.5 13.5 L9 21 Z" fill="#12bfae" stroke="#eafffb" stroke-width="1.4"/></svg><span class="tag" id="cursorTag">✦ Ever</span></div>
+  <div class="art-head">
+    <span class="live-dot" id="liveDot" style="display:none"></span>
+    <div style="flex:1;min-width:0"><b id="artTitle">Live Planner</b><small id="artSub">Your plans build here</small></div>
+    <button class="iconbtn" onclick="closeArtifact()">✕</button>
+  </div>
+  <div class="art-tabs">
+    <button class="on" id="tab-planner" onclick="showTab('planner')">📅 Live Planner</button>
+    <button id="tab-library" onclick="showTab('library')">🧩 Artifacts</button>
+    <button id="tab-teach" onclick="showTab('teach')">🧸 Deskmate</button>
+  </div>
+
+  <div class="art-view on" id="view-planner">
+    <div id="buildLog"><div class="step">Ask for a plan in chat — it builds here, day by day, on your calendar.</div></div>
+    <div id="artBody"></div>
+  </div>
+
+  <div class="art-view" id="view-library"><div id="libBody"></div></div>
+
+  <div class="art-view" id="view-teach">
+    <div class="teachBox">
+      <h3>🧸 Your Deskmate</h3>
+      <p>Pick your study buddy. It sits with you while you study — click it anytime for encouragement.</p>
+      <div style="text-align:center;font-size:4.2rem;padding:8px" id="matePreview">🐼</div>
+      <div class="mateGrid" id="matePicker"></div>
+      <div class="field"><label>NAME YOUR DESKMATE</label><input id="mateNameInput" placeholder="e.g. Chotu"></div>
+      <button class="newchat" style="text-align:center;margin-top:12px" onclick="saveMate()">Save Deskmate ✓</button>
+    </div>
+    <div class="teachBox">
+      <h3>🎓 Teach & Learn</h3>
+      <p><b style="color:#fff">You become the teacher.</b> Explain a topic to your deskmate by speaking or typing. It finds mistakes & gaps, praises what you nailed, and asks you a question.</p>
+      <input id="teachTopic" placeholder="Topic — e.g. Electricity: Ohm's Law">
+      <textarea id="teachText" rows="6" placeholder="Explain it like you're teaching a friend…"></textarea>
+      <button class="micbtn" id="micBtn" onclick="toggleMic()">🎤 Speak — Deskmate is Listening</button>
+      <div class="pill" id="micState" style="margin-top:9px">Speak (live transcription) or just type above.</div>
+      <button class="newchat" style="text-align:center;margin-top:10px" onclick="analyzeTeaching()">✨ Finish — Check My Explanation</button>
+      <div id="teachFeedback"></div>
+    </div>
+  </div>
+
+  <div class="art-actions">
+    <button onclick="printPlan()">🖨️ Print</button>
+    <button onclick="downloadPlan()">⬇️ Download</button>
+    <button onclick="copyPlan()">📋 Copy</button>
+  </div>
+</section>
+
+<!-- SETTINGS (owner only, hidden behind gear) -->
+<button class="gearbtn" title="Settings" onclick="openSettings()">⚙</button>
+<div class="overlay" id="settingsModal">
+  <div class="modalCard">
+    <h2 style="margin-top:0;font-size:1.2rem">⚙ Settings</h2>
+    <p>Owner only. Students never need this.</p>
+    <div class="field"><label>AI CONNECTION KEY</label><input type="password" id="apiKey" placeholder="Paste key…" autocomplete="off"></div>
+    <div class="field"><label>MODEL</label>
+      <select id="modelSel">
+        <option value="nvidia/nemotron-3-ultra-550b-a55b">Auto — Nemotron 3 Ultra</option>
+        <option value="google/gemma-3-12b-it">Gemma 3 12B</option>
+        <option value="google/gemma-4-31b-it">Gemma 4 31B</option>
+        <option value="z-ai/glm-5.3-flash">GLM 5.3 Flash</option>
+      </select>
+    </div>
+    <div class="pill" id="apiState" style="margin-top:13px">Your key stays on this device only.</div>
+    <div class="ob-nav" style="margin-top:16px">
+      <button onclick="clearKey()">Remove</button>
+      <button onclick="testKey()">Test</button>
+      <button class="primary" onclick="closeSettings()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="overlay" id="onboarding">
+  <div class="modalCard">
+    <div id="ob1">
+      <img class="logoimg" src="assets/logo.png" alt="">
+      <h2>Welcome to EverTask 👋</h2>
+      <p>Your personal study planner. Tell Ever what you're studying and watch a day-by-day plan — built from your real textbook chapters — land live on your calendar.</p>
+      <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="ob-nav"><button onclick="closeOnboarding()">Skip</button><button class="primary" onclick="obGo(2)">Let's personalise →</button></div>
+    </div>
+    <div id="ob2" style="display:none">
+      <h2 style="margin-top:0">Make it yours ✨</h2>
+      <p>Ever will greet you by name and build plans around your class and time.</p>
+      <div class="field"><label>YOUR NAME</label><input id="pfName" placeholder="e.g. Aarav"></div>
+      <div class="grid2">
+        <div class="field"><label>CLASS</label><select id="pfClass"><option>9</option><option selected>10</option><option>11</option><option>12</option></select></div>
+        <div class="field"><label>DAILY STUDY TIME</label><select id="pfHours"><option value="1">1 hour</option><option value="2" selected>2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option></select></div>
+      </div>
+      <div class="field"><label>PLAN LANGUAGE</label><select id="pfLang"><option value="en">English</option><option value="hinglish">Hinglish</option><option value="hi">हिन्दी</option></select></div>
+      <div class="field"><label>YOUR GOAL (OPTIONAL)</label><input id="pfGoal" placeholder="e.g. Score 95% in boards"></div>
+      <div class="dots"><i></i><i class="on"></i><i></i><i></i></div>
+      <div class="ob-nav"><button onclick="obGo(1)">← Back</button><button class="primary" onclick="saveProfileStep()">Continue →</button></div>
+    </div>
+    <div id="ob3" style="display:none">
+      <h2 style="margin-top:0">Pick your deskmate 🧸</h2>
+      <p id="obMateTalk">Tap one! It will sit with you while you study, and listen when you teach it.</p>
+      <div style="text-align:center;font-size:4.4rem;padding:10px" id="obMatePreview">🐼</div>
+      <div class="mateGrid" id="obMateGrid"></div>
+      <div class="dots"><i></i><i></i><i class="on"></i><i></i></div>
+      <div class="ob-nav"><button onclick="obGo(2)">← Back</button><button class="primary" onclick="finishOnboarding()">This one! →</button></div>
+    </div>
+    <div id="ob4" style="display:none">
+      <h2 style="margin-top:0">You're all set 🎉</h2>
+      <p id="obSummary"></p>
+      <div class="ob-nav" style="margin-top:14px"><button class="primary" onclick="createFirstPlan()">📅 Create my first plan</button></div>
+      <div class="dots"><i></i><i></i><i></i><i class="on"></i></div>
+      <div class="ob-nav"><button onclick="closeOnboarding()">I'll explore on my own</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============ SAFE STORAGE (works in sandboxed previews too) ============ */
+var store = (function(){
+  var mem = {}, ok = false;
+  try { localStorage.setItem('__et','1'); localStorage.removeItem('__et'); ok = true; } catch(e) { ok = false; }
+  return {
+    get: function(k){ if(ok){ try { return localStorage.getItem(k); } catch(e){} } return (k in mem ? mem[k] : null); },
+    set: function(k,v){ if(ok){ try { localStorage.setItem(k,v); return; } catch(e){} } mem[k] = String(v); },
+    del: function(k){ if(ok){ try { localStorage.removeItem(k); return; } catch(e){} } delete mem[k]; }
+  };
+})();
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+function toast(msg){ var el=$('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(function(){ el.classList.remove('show'); }, 2600); }
+function nowStr(){ return new Date().toLocaleString('en-IN',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}); }
+
+/* ============ REAL NCERT CHAPTERS ============ */
+var BOOKS = {
+ "10:science": {book:"NCERT Science — Class 10", chapters:["Chemical Reactions and Equations","Acids, Bases and Salts","Metals and Non-metals","Carbon and its Compounds","Life Processes","Control and Coordination","How do Organisms Reproduce?","Heredity","Light – Reflection and Refraction","The Human Eye and the Colourful World","Electricity","Magnetic Effects of Electric Current","Our Environment"]},
+ "10:maths": {book:"NCERT Mathematics — Class 10", chapters:["Real Numbers","Polynomials","Pair of Linear Equations in Two Variables","Quadratic Equations","Arithmetic Progressions","Triangles","Coordinate Geometry","Introduction to Trigonometry","Some Applications of Trigonometry","Circles","Areas Related to Circles","Surface Areas and Volumes","Statistics","Probability"]},
+ "9:science": {book:"NCERT Science — Class 9", chapters:["Matter in Our Surroundings","Is Matter Around Us Pure","Atoms and Molecules","Structure of the Atom","The Fundamental Unit of Life","Tissues","Motion","Force and Laws of Motion","Gravitation","Work and Energy","Sound","Improvement in Food Resources"]},
+ "9:maths": {book:"NCERT Mathematics — Class 9", chapters:["Number Systems","Polynomials","Coordinate Geometry","Linear Equations in Two Variables","Introduction to Euclid's Geometry","Lines and Angles","Triangles","Quadrilaterals","Circles","Heron's Formula","Surface Areas and Volumes","Statistics"]},
+ "11:physics": {book:"NCERT Physics — Class 11", chapters:["Units and Measurements","Motion in a Straight Line","Motion in a Plane","Laws of Motion","Work, Energy and Power","System of Particles and Rotational Motion","Gravitation","Mechanical Properties of Solids","Mechanical Properties of Fluids","Thermal Properties of Matter","Thermodynamics","Kinetic Theory","Oscillations","Waves"]},
+ "12:physics": {book:"NCERT Physics — Class 12", chapters:["Electric Charges and Fields","Electrostatic Potential and Capacitance","Current Electricity","Moving Charges and Magnetism","Magnetism and Matter","Electromagnetic Induction","Alternating Current","Electromagnetic Waves","Ray Optics and Optical Instruments","Wave Optics","Dual Nature of Radiation and Matter","Atoms","Nuclei","Semiconductor Electronics"]},
+ "11:chemistry": {book:"NCERT Chemistry — Class 11", chapters:["Some Basic Concepts of Chemistry","Structure of Atom","Classification of Elements and Periodicity","Chemical Bonding and Molecular Structure","Thermodynamics","Equilibrium","Redox Reactions","Organic Chemistry – Basic Principles","Hydrocarbons"]},
+ "12:chemistry": {book:"NCERT Chemistry — Class 12", chapters:["Solutions","Electrochemistry","Chemical Kinetics","The p-Block Elements","The d- and f-Block Elements","Coordination Compounds","Haloalkanes and Haloarenes","Alcohols, Phenols and Ethers","Aldehydes, Ketones and Carboxylic Acids","Amines","Biomolecules"]}
+};
+BOOKS["10:mathematics"]=BOOKS["10:maths"]; BOOKS["10:social"]={book:"NCERT Social Science — Class 10",chapters:["Nationalism in India","Resources and Development","Agriculture","Power Sharing","Federalism","Political Parties","Development","Sectors of the Indian Economy","Money and Credit","Globalisation and the Indian Economy"]};
+var GENERIC = ["Core Concepts & Terminology","Foundations & Key Principles","Important Formulas","Worked Examples","Practice Problems","Diagrams & Summary","Previous Questions","Mixed Revision","Weak-Area Repair","Full Mock Review"];
+
+/* ============ STATE ============ */
+function loadJSON(key, fallback){ try { var v = store.get(key); return v ? JSON.parse(v) : fallback; } catch(e){ return fallback; } }
+var chats = loadJSON('et4_chats', []);
+var artifacts = loadJSON('et4_artifacts', []);
+var checks = loadJSON('et4_checks', {});
+var profile = loadJSON('et4_profile', {name:"", cls:"10", hours:"2", lang:"en", goal:""});
+var mate = loadJSON('et4_mate', {type:"🐼", name:"Chotu"});
+var currentId = null, currentPlan = null, currentTab = 'planner';
+function persist(){ store.set('et4_chats', JSON.stringify(chats.slice(0,25))); store.set('et4_artifacts', JSON.stringify(artifacts.slice(0,20))); store.set('et4_checks', JSON.stringify(checks)); }
+setInterval(function(){ var c=$('clock'); if(c) c.textContent = '🕒 ' + nowStr(); }, 1000);
+
+/* ============ LANGUAGE ============ */
+var STR = {
+ en:{sprint:"Study Sprint", finding:"Finding your textbook…", picking:"Picking the right chapters for you…", designing:"Designing your perfect days…", ready:"Your plan is ready — you've got this!", today:"TODAY", motive:["Small steps daily beat last-minute panic.","Consistency is your superpower.","One chapter at a time — progress is progress.","Future you is already grateful for today.","Focus a little, shine a lot."]},
+ hinglish:{sprint:"Study Sprint", finding:"Tumhari textbook dhoondh raha hoon…", picking:"Tumhare liye best chapters chun raha hoon…", designing:"Tumhare perfect din design kar raha hoon…", ready:"Plan ready hai — tum kar sakte ho!", today:"AAJ", motive:["Roz thoda-thoda, panic se best hai.","Consistency hi superpower hai. Lage raho!","Ek chapter at a time — progress matlab progress.","Kal wala tum, aaj ke liye thank you bolega.","Thodi der focus, lambi shine."]},
+ hi:{sprint:"अध्ययन योजना", finding:"आपकी पाठ्यपुस्तक खोज रहे हैं…", picking:"आपके लिए सही अध्याय चुन रहे हैं…", designing:"आपके दिन तैयार कर रहे हैं…", ready:"आपकी योजना तैयार है — आप कर सकते हैं!", today:"आज", motive:["रोज़ थोड़ा-थोड़ा सबसे अच्छा है।","निरंतरता ही आपकी ताकत है।","एक समय में एक अध्याय।","आपका भविष्य आज के लिए धन्यवाद कहेगा।","थोड़ा ध्यान, बड़ी सफलता।"]}
+};
+function L(){ return STR[profile.lang] || STR.en; }
+
+/* ============ LANDING ============ */
+function buildLandingCal(){
+  var el = $('ldCal'); if(!el) return;
+  var now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  var first = new Date(y, m, 1).getDay(), last = new Date(y, m + 1, 0).getDate(), today = now.getDate();
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var t = $('ldTitle'); if(t) t.textContent = months[m] + ' ' + y;
+  var h = ['SU','MO','TU','WE','TH','FR','SA'].map(function(d){ return '<div class="ld-dow">'+d+'</div>'; }).join('');
+  for(var i=0;i<first;i++) h += '<div class="ld-cell" style="opacity:.22"></div>';
+  for(var n=1;n<=last;n++){
+    var label = n===today ? 'Light • 2h' : (n===today+2 ? 'Electricity • 2h' : '');
+    h += '<div class="ld-cell'+(n===today?' today':'')+'"><b>'+n+'</b>'+label+'</div>';
+  }
+  el.innerHTML = h;
+}
+var appEntered = false;
+function enterApp(){
+  if(appEntered) return; appEntered = true;
+  $('landing').style.display = 'none';
+  $('app').classList.add('on');
+  if(!store.get('et4_seen')) setTimeout(openOnboarding, 300);
+  var i = $('input'); if(i) i.focus();
+}
+
+/* ============ CHAT ============ */
+function curChat(){
+  var c = null, i;
+  for(i=0;i<chats.length;i++) if(chats[i].id===currentId) c = chats[i];
+  if(!c){ c = {id:'c'+Date.now(), title:'New chat', msgs:[]}; chats.unshift(c); currentId = c.id; }
+  return c;
+}
+function renderChatList(){
+  $('chatList').innerHTML = chats.map(function(c){
+    return '<div class="chat-item'+(c.id===currentId?' active':'')+'" data-id="'+c.id+'" onclick="openChat(this.dataset.id)">💬 '+esc(c.title||'New chat')+'</div>';
+  }).join('') || '<div style="color:var(--muted);font-size:.8rem;padding:5px">No chats yet</div>';
+}
+function newChat(){ currentId = 'c'+Date.now(); chats.unshift({id:currentId, title:'New chat', msgs:[]}); persist(); renderChatList(); renderMsgs(); if(window.innerWidth<820) $('sidebar').classList.remove('open'); var i=$('input'); if(i)i.focus(); }
+function openChat(id){ currentId = id; renderChatList(); renderMsgs(); if(window.innerWidth<820) $('sidebar').classList.remove('open'); }
+function toggleSidebar(){ $('sidebar').classList.toggle('open'); }
+function mdHtml(text){
+  function inline(s){
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    s = s.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,.12);padding:1px 5px;border-radius:6px">$1</code>');
+    s = s.replace(/(^|[^*])\*([^\*\n]+)\*/g, '$1<i>$2</i>');
+    return s;
+  }
+  var lines = esc(text).split('\n'), out = [], i = 0;
+  while(i < lines.length){
+    var line = lines[i];
+    // table block
+    if(/^\s*\|.*\|\s*$/.test(line)){
+      var rows = [];
+      while(i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])){
+        var raw = lines[i].trim().replace(/^\||\|$/g, '');
+        if(!/^\s*:?-{2,}/.test(raw.replace(/\|/g,'').trim()) && !/^[\s\|:\-]+$/.test(raw)) rows.push(raw.split('|').map(function(c){ return c.trim(); }));
+        i++;
+      }
+      if(rows.length){
+        out.push('<table>' + rows.map(function(r, ri){
+          var tag = ri===0 ? 'th' : 'td';
+          return '<tr>' + r.map(function(c){ return '<'+tag+'>'+inline(c)+'</'+tag+'>'; }).join('') + '</tr>';
+        }).join('') + '</table>');
+      }
+      continue;
+    }
+    var h = line.match(/^#{1,4}\s+(.*)$/);
+    if(h){ out.push('<div class="md-h">'+inline(h[1])+'</div>'); i++; continue; }
+    if(/^\s*(-{3,}|\*{3,})\s*$/.test(line)){ out.push('<hr class="md-hr">'); i++; continue; }
+    var li = line.match(/^\s*[-*•]\s+(.*)$/);
+    if(li){ out.push('<div class="md-li">• '+inline(li[1])+'</div>'); i++; continue; }
+    var ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
+    if(ol){ out.push('<div class="md-li">'+inline(ol[0])+'</div>'); i++; continue; }
+    out.push(inline(line)); i++;
+  }
+  return out.join('\n');
+}
+function rowHtml(role, text){
+  var av = role==='user' ? '<div class="avatar">YOU</div>' : '<div class="avatar bot"><img src="assets/logo.png" alt=""></div>';
+  var body = role==='user' ? esc(text) : mdHtml(text);
+  return '<div class="row '+role+'">'+av+'<div class="bubble">'+body+'</div></div>';
+}
+function renderMsgs(){
+  var c = curChat(), col = $('msgCol');
+  if(!c.msgs.length){
+    col.innerHTML = '<div class="welcome"><img class="logoimg" src="assets/logo.png" alt=""><h1>'
+      + (profile.name ? ('Hey '+esc(profile.name)+'! What shall we plan today?') : 'What shall we plan today?')
+      + '</h1><p>Tell me your class, subject and how many days you have — I will fetch the real book & chapters and build your calendar plan live, right beside you. Try an example below.</p></div>';
+    return;
+  }
+  col.innerHTML = c.msgs.map(function(m){ return rowHtml(m.role, m.text); }).join('');
+  scrollChat();
+}
+function scrollChat(){ var m=$('messages'); if(m) m.scrollTop = m.scrollHeight; }
+function addMsg(role, text){
+  var c = curChat(); c.msgs.push({role:role, text:text});
+  if(role==='user' && c.msgs.filter(function(m){return m.role==='user';}).length===1) c.title = text.slice(0,40);
+  persist(); renderChatList();
+  if($('msgCol').querySelector('.welcome')) renderMsgs();
+  else { $('msgCol').insertAdjacentHTML('beforeend', rowHtml(role, text)); scrollChat(); }
+}
+function addTool(text){
+  var id = 't'+Date.now();
+  $('msgCol').insertAdjacentHTML('beforeend', '<div class="row bot" id="'+id+'"><div class="avatar bot"><img src="assets/logo.png" alt=""></div><div class="bubble"><span class="tool"><span class="spin"></span>'+esc(text)+'</span></div></div>');
+  scrollChat(); return id;
+}
+function killEl(id){ var e=$(id); if(e) e.remove(); }
+function quick(q){ $('input').value = q; send(); }
+$('input').addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+$('input').addEventListener('input', function(e){ e.target.style.height='auto'; e.target.style.height = Math.min(130, e.target.scrollHeight)+'px'; });
+
+/* ============ WEB + AI (optional key) ============ */
+function getKey(){ return store.get('et4_key') || ''; }
+function getModel(){ return store.get('et4_model') || 'nvidia/nemotron-3-ultra-550b-a55b'; }
+function fetchJSON(url, opts, timeoutMs){
+  if(typeof fetch !== 'function') return Promise.reject(new Error('Network unavailable here'));
+  var ctl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function(){ ctl.abort(); }, timeoutMs||20000) : null;
+  var o = opts || {}; if(ctl) o.signal = ctl.signal;
+  return fetch(url, o).then(function(r){
+    return r.json().catch(function(){ return {error:'Bad response ('+r.status+')'}; }).then(function(d){
+      if(timer) clearTimeout(timer);
+      if(!r.ok){ var e = new Error(d.error||('HTTP '+r.status)); e.detail = d.detail; throw e; }
+      return d;
+    });
+  });
+}
+function webSearch(q){
+  return fetchJSON('/api/search?q='+encodeURIComponent(q), {}, 6000).catch(function(){ return {results:[]}; });
+}
+function nimChat(messages){
+  var key = getKey(); if(!key) return Promise.resolve(null);
+  var payload = {model:getModel(), messages:messages, temperature:0.6, max_tokens:900};
+  return fetchJSON('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({apiKey:key, model:payload.model, messages:messages, temperature:0.6, max_tokens:900})}, 35000)
+    .then(function(d){ return (d.choices && d.choices[0] && d.choices[0].message) ? d.choices[0].message.content : null; })
+    .catch(function(){
+      return fetchJSON('https://integrate.api.nvidia.com/v1/chat/completions', {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key}, body:JSON.stringify(payload)}, 35000)
+        .then(function(d){ return (d.choices && d.choices[0] && d.choices[0].message) ? d.choices[0].message.content : null; });
+    });
+}
+
+/* ============ PLANNER ENGINE ============ */
+function parseReq(text){
+  var t = text.toLowerCase();
+  var days = (t.match(/(\d+)\s*-?\s*days?/)||[])[1] || (t.indexOf('tomorrow')>-1 ? 1 : 7);
+  var hours = (t.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)/)||[])[1] || (profile.hours || 2);
+  var cls = (t.match(/class\s*(\d{1,2})/)||[])[1] || profile.cls || '10';
+  var subs = ['science','maths','mathematics','physics','chemistry','social','biology'];
+  var sub = 'science'; for(var i=0;i<subs.length;i++) if(t.indexOf(subs[i])>-1){ sub = subs[i]; break; }
+  if(sub==='mathematics') sub='maths'; if(sub==='biology') sub='science';
+  return { days: Math.min(30, Math.max(1, parseInt(days,10)||7)), hours: parseFloat(hours)||2, cls: String(cls), sub: sub };
+}
+function difficulty(ch){
+  if(/electricity|trigonometry|quadratic|optics|magnet|carbon|heredity|coordinate|equilibrium|electro/i.test(ch)) return ['Hard','b-hard'];
+  if(/real numbers|environment|matter|development|units|number systems/i.test(ch)) return ['Easy','b-easy'];
+  return ['Medium','b-med'];
+}
+function dayTheme(i,total){
+  var th = ["🌱 Foundation Day","🚀 Momentum Day","🎯 Deep Focus Day","🧩 Practice Day","🔥 Power Day","🌊 Flow Day","🏆 Finishing Day"];
+  return i===total-1 ? "🏆 Final Revision Day" : th[i % th.length];
+}
+function buildPlan(req){
+  var entry = BOOKS[req.cls+':'+req.sub];
+  var chapters = entry ? entry.chapters : GENERIC;
+  var book = entry ? entry.book : 'Your recommended textbook';
+  var per = Math.max(1, Math.ceil(chapters.length / req.days));
+  var days = [], ci = 0, start = new Date();
+  for(var d=0; d<req.days; d++){
+    var isRev = (d===req.days-1 && req.days>3);
+    var todays = [];
+    if(isRev) todays.push({chapter:'Full Revision + Mock Test', detail:'Timed sample paper • Analyse mistakes • Formula recap'});
+    else {
+      for(var k=0;k<per && ci<chapters.length;k++,ci++) todays.push({chapter:chapters[ci], detail:'Read the chapter • Short notes • Exercise questions'});
+      if(!todays.length) todays.push({chapter:'Revision & Practice', detail:'Previous questions • Weak topics • Flashcards'});
+    }
+    var mins = Math.round(req.hours*60), Lp = Math.round(mins*.55), Pp = Math.round(mins*.3), Rp = mins-Lp-Pp;
+    var dt = new Date(start); dt.setDate(start.getDate()+d);
+    days.push({
+      day:d+1, y:dt.getFullYear(), m:dt.getMonth(), dnum:dt.getDate(),
+      date: dt.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}),
+      chapters: todays,
+      slots: [
+        {t:'Learn', d: Lp+' min — '+todays.map(function(x){return x.chapter;}).join(' + '), task:'Concepts + reading + notes'},
+        {t:'Practice', d: Pp+' min — exercises & examples', task:'Solve questions / numericals'},
+        {t:'Revise', d: Rp+' min — recall & error log', task:'Flashcards + formulas'}
+      ]
+    });
+  }
+  return {
+    id: 'p'+Date.now(),
+    title: (profile.name ? profile.name+'’s ' : '') + req.days + '-Day ' + req.sub.charAt(0).toUpperCase()+req.sub.slice(1) + ' ' + L().sprint + ' • Class ' + req.cls,
+    book: book, cls: req.cls, sub: req.sub, hours: req.hours, total: chapters.length,
+    created: nowStr(), days: days
+  };
+}
+function planHeader(p){
+  var totalXp = p.days.reduce(function(a,d){ return a + d.chapters.length*20 + d.slots.length*10; }, 0);
+  return '<div class="plan-hero"><div style="font-size:.66rem;letter-spacing:.14em;font-weight:900;color:#7ef0df">✦ YOUR PERSONAL PLANNER</div>'
+    + '<h2>'+esc(p.title)+'</h2><p>📚 '+esc(p.book)+'<br>🕒 '+p.hours+' hrs/day • Starts today • '+esc(p.created)
+    + (profile.goal ? '<br>🎯 Goal: '+esc(profile.goal) : '')
+    + '</p><div style="margin-top:10px"><span class="badge b-easy">⭐ Earn up to '+totalXp+' XP</span> <span class="badge b-med">📖 '+p.total+' chapters</span> <span class="badge b-hard">🗓️ '+p.days.length+' days</span></div></div>'
+    + '<div class="plan-stats"><div class="pstat"><b>'+p.days.length+'</b><span>DAYS</span></div><div class="pstat"><b>'+p.total+'</b><span>CHAPTERS</span></div><div class="pstat"><b>'+p.hours+'h</b><span>/ DAY</span></div><div class="pstat"><b id="pct">0%</b><span>DONE</span></div></div>'
+    + '<div class="progress"><i id="bar"></i></div>';
+}
+function slotHtml(p, d, sl, i){
+  var id = p.id+'-'+d.day+'-'+i, done = !!checks[id];
+  return '<label class="slot'+(done?' done':'')+'"><input type="checkbox" data-check="'+id+'" '+(done?'checked':'')+' onchange="toggleCheck(this)"><span class="st"><b>'+sl.t+'</b> — '+esc(sl.d)+' <span class="xp">+10 XP</span><small>'+esc(sl.task)+'</small></span></label>';
+}
+function dayDetailHtml(p, d){
+  var s = L();
+  var h = '<div class="day"><small>DAY '+d.day+' • '+esc(d.date).toUpperCase()+(d.day===1 ? ' • '+s.today : '')+'</small> <span style="font-size:.76rem;float:right">'+dayTheme(d.day-1, p.days.length)+'</span>';
+  d.chapters.forEach(function(c){ var df = difficulty(c.chapter); h += '<div class="chap">'+esc(c.chapter)+' <span class="badge '+df[1]+'">'+df[0]+'</span> <span class="xp">+20 XP</span></div><div style="color:var(--muted);font-size:.8rem;margin-top:2px">📖 '+esc(c.detail)+'</div>'; });
+  d.slots.forEach(function(sl,i){ h += slotHtml(p,d,sl,i); });
+  h += '<div class="motive">💬 '+s.motive[(d.day-1)%s.motive.length]+'</div></div>';
+  return h;
+}
+function toggleCheck(el){
+  var id = el.getAttribute('data-check'); checks[id] = el.checked; persist();
+  var lab = el.closest('.slot'); if(lab) lab.classList.toggle('done', el.checked);
+  if(currentPlan) updateProgress(currentPlan);
+}
+function updateProgress(p){
+  var total=0, done=0;
+  p.days.forEach(function(day){ day.slots.forEach(function(s,i){ total++; if(checks[p.id+'-'+day.day+'-'+i]) done++; }); });
+  var pct = total ? Math.round(done/total*100) : 0;
+  var b=$('bar'), t=$('pct'); if(b) b.style.width = pct+'%'; if(t) t.textContent = pct+'%';
+}
+
+/* ============ CALENDAR ============ */
+function ensureDates(p){
+  if(p.days.length && p.days[0].y === undefined){
+    var s = new Date();
+    p.days.forEach(function(d,i){ var dt=new Date(s); dt.setDate(s.getDate()+i); d.y=dt.getFullYear(); d.m=dt.getMonth(); d.dnum=dt.getDate(); });
+  }
+}
+function monthName(y,m){ return new Date(y,m,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'}); }
+function calendarHtml(p){
+  ensureDates(p);
+  var months = {}, order = [];
+  p.days.forEach(function(d){ var k=d.y+'-'+d.m; if(!months[k]){ months[k]={y:d.y,m:d.m,days:{}}; order.push(k); } months[k].days[d.dnum]=d; });
+  var today = new Date();
+  var out = '';
+  order.forEach(function(k){
+    var mo = months[k];
+    var first = new Date(mo.y, mo.m, 1).getDay(), last = new Date(mo.y, mo.m+1, 0).getDate();
+    var cells = ['SU','MO','TU','WE','TH','FR','SA'].map(function(x){ return '<div class="calDow">'+x+'</div>'; }).join('');
+    for(var i=0;i<first;i++) cells += '<div class="calCell dim"></div>';
+    for(var n=1;n<=last;n++){
+      var pd = mo.days[n];
+      var isToday = (today.getFullYear()===mo.y && today.getMonth()===mo.m && today.getDate()===n);
+      cells += '<div class="calCell'+(isToday?' today':'')+'" id="cal-'+p.id+'-'+mo.y+'-'+mo.m+'-'+n+'"'
+        + (pd ? ' data-day="'+pd.day+'" onclick="selectDay(this)"' : '') + '><div class="dnum">'+n+'</div>'
+        + (pd ? '<div class="ct" id="ct-'+p.id+'-'+pd.day+'"></div><div class="cx" id="cx-'+p.id+'-'+pd.day+'"></div>' : '') + '</div>';
+    }
+    out += '<div class="calWrap" id="calWrap-'+p.id+'-'+k+'"><div class="calHead"><b>🗓️ '+monthName(mo.y,mo.m)+'</b><span>'+p.days.length+' STUDY DAYS • TAP A DAY</span></div><div class="calGrid">'+cells+'</div></div>';
+  });
+  return out + '<div id="writerStage"></div><div class="dayDetail" id="dayDetail"></div>';
+}
+function fillCell(p, d){
+  var cell = document.querySelector('#cal-'+p.id+'-'+d.y+'-'+d.m+'-'+d.dnum); if(!cell) return;
+  var ct = $('ct-'+p.id+'-'+d.day), cx = $('cx-'+p.id+'-'+d.day);
+  cell.classList.add('filled');
+  if(ct) ct.textContent = d.chapters.map(function(c){ return c.chapter; }).join(' • ');
+  if(cx) cx.textContent = '🕒 '+p.hours+'h • +'+(d.chapters.length*20+30)+' XP';
+  if(cell.animate) { try { cell.animate([{transform:'scale(1.05)',opacity:.6},{transform:'scale(1)',opacity:1}],{duration:320,easing:'ease-out'}); } catch(e){} }
+}
+function selectDay(cellEl){
+  if(!currentPlan || !cellEl) return;
+  var dayNo = parseInt(cellEl.getAttribute('data-day'), 10);
+  var d = currentPlan.days[dayNo-1]; if(!d) return;
+  var all = document.querySelectorAll('.calCell.sel'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+  cellEl.classList.add('sel');
+  var det = $('dayDetail'); if(det) det.innerHTML = dayDetailHtml(currentPlan, d);
+  updateProgress(currentPlan);
+}
+function selectDayNo(n){ var cell = document.querySelector('.calCell[data-day="'+n+'"]'); if(cell) selectDay(cell); }
+
+/* ============ ARTIFACT PANEL ============ */
+function setViewTabs(active){
+  ['Chat','Planner','Art','Teach'].forEach(function(x){ var b=$('vt'+x); if(b) b.classList.remove('on'); });
+  var map = {chat:'vtChat', planner:'vtPlanner', library:'vtArt', teach:'vtTeach'};
+  var b = $(map[active]); if(b) b.classList.add('on');
+}
+function openArtifact(){
+  $('artifact').classList.add('open');
+  if(window.innerWidth < 900) $('scrim').classList.add('on');
+}
+function closeArtifact(){ $('artifact').classList.remove('open'); $('scrim').classList.remove('on'); hideCursor(); setViewTabs('chat'); }
+function showTab(t){
+  currentTab = t;
+  ['planner','library','teach'].forEach(function(x){
+    $('tab-'+x).classList.toggle('on', x===t);
+    $('view-'+x).classList.toggle('on', x===t);
+  });
+  setViewTabs(t);
+  if(t==='library') renderLibrary();
+  if(t==='teach') renderMatePicker();
+}
+function openPlannerTab(){ showTab('planner'); openArtifact(); }
+function openArtifactsTab(){ showTab('library'); openArtifact(); }
+function openTeachTab(){ showTab('teach'); openArtifact(); }
+
+/* bot cursor */
+function cursorPos(el){
+  var a = $('artifact').getBoundingClientRect(), r = el.getBoundingClientRect();
+  return { x: r.left - a.left + r.width/2, y: r.top - a.top + r.height/2 };
+}
+function moveCursorTo(el, label){
+  return new Promise(function(resolve){
+    var c = $('botCursor');
+    if(!el){ resolve(); return; }
+    if(label) $('cursorTag').textContent = label;
+    c.classList.add('show');
+    var pt = cursorPos(el);
+    c.style.transform = 'translate('+(pt.x-2)+'px,'+(pt.y-2)+'px)';
+    setTimeout(function(){
+      var rip = document.createElement('span'); rip.className='ripple';
+      rip.style.left = pt.x+'px'; rip.style.top = pt.y+'px';
+      $('artifact').appendChild(rip); setTimeout(function(){ rip.remove(); }, 600);
+      resolve();
+    }, 210);
+  });
+}
+function moveCursorXY(x, y, label){
+  var c = $('botCursor'); if(label) $('cursorTag').textContent = label;
+  c.classList.add('show'); c.style.transform = 'translate('+x+'px,'+y+'px)';
+  return wait(260);
+}
+function hideCursor(){ $('botCursor').classList.remove('show'); }
+function typeInto(el, text, speed){
+  if(!el) return Promise.resolve();
+  el.textContent = '';
+  var i = 0;
+  return new Promise(function(resolve){
+    (function step(){ if(i <= text.length){ el.textContent = text.slice(0, i); i++; setTimeout(step, speed||14); } else resolve(); })();
+  });
+}
+function logStep(text, done){
+  var el = document.createElement('div');
+  el.className = 'step' + (done ? ' done' : '');
+  el.innerHTML = (done ? '✓ ' : '<span class="spin"></span> ') + esc(text);
+  $('buildLog').appendChild(el);
+  return el;
+}
+function finishStep(el, text){ if(!el) return; el.classList.add('done'); el.innerHTML = '✓ ' + esc(text); }
+
+function renderPlanInstant(p){
+  showTab('planner'); openArtifact();
+  currentPlan = p;
+  $('liveDot').style.display = 'none';
+  $('artTitle').textContent = p.title;
+  $('artSub').textContent = p.book + ' • ' + p.created;
+  $('buildLog').innerHTML = '<div class="step done">✓ Your planner is ready — tap any date for its details</div>';
+  $('artBody').innerHTML = planHeader(p) + calendarHtml(p);
+  p.days.forEach(function(d){ fillCell(p, d); });
+  selectDayNo(1); updateProgress(p);
+  saveArtifact(p);
+}
+function saveArtifact(p){
+  artifacts = [p].concat(artifacts.filter(function(a){ return a.id !== p.id; }));
+  persist(); updateArtCount();
+}
+function updateArtCount(){
+  var el = $('artCount');
+  el.textContent = artifacts.length ? (artifacts.length + ' saved planner(s) — tap to view') : 'No artifacts yet';
+}
+
+async function streamPlan(plan){
+  showTab('planner'); openArtifact();
+  currentPlan = plan; saveArtifact(plan);
+  var s = L();
+  $('liveDot').style.display = '';
+  $('artTitle').textContent = s.designing;
+  $('artSub').textContent = plan.book;
+  $('buildLog').innerHTML = '';
+  $('artBody').innerHTML = '';
+  try {
+    await moveCursorXY(56, 84, '✦ Ever is here…');
+    var steps = [s.finding, s.picking, s.designing];
+    for(var i=0;i<steps.length;i++){ var lg = logStep(steps[i]); await wait(240); finishStep(lg, steps[i]); }
+    $('buildLog').innerHTML = '<div class="step done">✓ ' + esc(s.ready) + '</div>';
+    // hero
+    $('artBody').innerHTML = planHeader(plan);
+    var heroH = $('artBody').querySelector('.plan-hero h2');
+    var fullTitle = heroH ? heroH.textContent : '';
+    await moveCursorTo(heroH, '✍️ Writing your plan…');
+    if(heroH) await typeInto(heroH, fullTitle, 9);
+    // calendar rolls open
+    $('artBody').insertAdjacentHTML('beforeend', calendarHtml(plan));
+    var cal = document.querySelector('.calWrap'); if(cal) cal.classList.add('roll');
+    await moveCursorTo(cal, '🗓️ Opening your calendar…');
+    var stage = $('writerStage');
+    for(var di=0; di<plan.days.length; di++){
+      var d = plan.days[di];
+      var cell = document.querySelector('#cal-'+plan.id+'-'+d.y+'-'+d.m+'-'+d.dnum);
+      // 1) WRITE the day on a draft note
+      stage.innerHTML = '<div class="draft" id="draftNow"><span class="tag">✍️ EVER IS WRITING DAY '+d.day+'</span><br><b id="draftTitle"></b><div class="dl" id="draftBody"></div></div>';
+      var v = $('view-planner'); if(v){ try { v.scrollTo({top:v.scrollHeight, behavior:'smooth'}); } catch(e){ v.scrollTop = v.scrollHeight; } }
+      var draft = $('draftNow');
+      await moveCursorTo(draft, '✍️ Writing Day '+d.day+'…');
+      await typeInto($('draftTitle'), 'Day '+d.day+' — '+d.chapters.map(function(c){return c.chapter;}).join(' + '), 7);
+      $('draftBody').textContent = d.slots.map(function(sl){ return '• '+sl.t+': '+sl.d; }).join('\n');
+      await wait(110);
+      // 2) FLY it to its date
+      if(cell && draft.animate){
+        try {
+          var a = draft.getBoundingClientRect(), b = cell.getBoundingClientRect();
+          var dx = (b.left + b.width/2) - (a.left + a.width/2), dy = (b.top + b.height/2) - (a.top + a.height/2);
+          await moveCursorXY(36, 110, '🚀 To '+d.date+'…');
+          var anim = draft.animate([
+            {transform:'translate(0,0) scale(1)', opacity:1},
+            {transform:'translate('+(dx*.55)+'px,'+(dy-60)+'px) scale(.62) rotate(-2deg)', opacity:1, offset:.55},
+            {transform:'translate('+dx+'px,'+dy+'px) scale(.22)', opacity:.9}
+          ], {duration:520, easing:'cubic-bezier(.22,1,.36,1)', fill:'forwards'});
+          if(anim && anim.finished) await anim.finished.catch(function(){});
+        } catch(e){}
+      }
+      // 3) SLAM onto the calendar
+      stage.innerHTML = '';
+      fillCell(plan, d);
+      await moveCursorTo(cell, '📌 Day '+d.day+' locked in!');
+      updateProgress(plan);
+      await wait(60);
+    }
+    selectDayNo(1);
+  } catch(e) {
+    renderPlanInstant(plan);
+    return;
+  }
+  hideCursor();
+  $('liveDot').style.display = 'none';
+  $('artTitle').textContent = plan.title;
+  $('artSub').textContent = plan.book + ' • ' + plan.created;
+  saveArtifact(plan);
+  updateProgress(plan);
+}
+
+/* library */
+function renderLibrary(){
+  var el = $('libBody');
+  if(!artifacts.length){
+    el.innerHTML = '<div style="color:var(--muted);line-height:1.7;padding:8px">No artifacts yet.<br>Ask in chat: <b style="color:#fff">“Make a 7-day plan for Class 10 Science”</b> and it will appear here.</div>';
+    return;
+  }
+  el.innerHTML = artifacts.map(function(a){
+    return '<div class="art-card" data-open="'+a.id+'" onclick="openArtifactById(this.dataset.open)"><b>📅 '+esc(a.title)+'</b><p>📚 '+esc(a.book)+'<br>'+a.days.length+' days • '+a.hours+' hrs/day • '+esc(a.created)+'</p><div class="rowb"><button data-open="'+a.id+'" onclick="event.stopPropagation();openArtifactById(this.dataset.open)">Open</button><button data-del="'+a.id+'" onclick="event.stopPropagation();deleteArtifact(this.dataset.del)">Delete</button></div></div>';
+  }).join('');
+}
+function openArtifactById(id){
+  var a = null; artifacts.forEach(function(x){ if(x.id===id) a = x; });
+  if(!a) return;
+  renderPlanInstant(a);
+}
+function deleteArtifact(id){
+  artifacts = artifacts.filter(function(a){ return a.id !== id; });
+  persist(); updateArtCount(); renderLibrary(); toast('Artifact deleted');
+}
+
+/* print / download / copy */
+function planText(p){
+  return p.title+'\nBook: '+p.book+'\nCreated: '+p.created+'\n\n' + p.days.map(function(d){
+    return 'DAY '+d.day+' ('+d.date+')\n' + d.chapters.map(function(c){ return ' • '+c.chapter+' — '+c.detail; }).join('\n') + '\n' + d.slots.map(function(s){ return '   □ '+s.t+': '+s.d; }).join('\n');
+  }).join('\n\n');
+}
+function printableHtml(p){
+  var rows = p.days.map(function(d){
+    return '<div class="d"><h3>Day '+d.day+' — '+esc(d.date)+': '+d.chapters.map(function(c){return esc(c.chapter);}).join(' + ')+'</h3>'
+      + d.chapters.map(function(c){ return '<p>'+esc(c.detail)+'</p>'; }).join('')
+      + '<ul>'+d.slots.map(function(s){ return '<li>☐ <b>'+s.t+'</b> — '+esc(s.d)+' ('+esc(s.task)+')</li>'; }).join('')+'</ul></div>';
+  }).join('');
+  return '<!DOCTYPE html><html><head><title>'+esc(p.title)+'</title><style>body{font-family:Arial,sans-serif;color:#14243d;margin:32px}h3{color:#0a7c6c}.d{border:1px solid #d7e3f2;border-radius:12px;padding:14px;margin:12px 0;page-break-inside:avoid}li{margin:5px 0}.meta{color:#5b6b82}</style></head><body><h1 style="font-size:21px">'+esc(p.title)+'</h1><p class="meta">'+esc(p.book)+'<br>'+p.hours+' hrs/day • '+p.days.length+' days • '+esc(p.created)+'</p>'+rows+'<p class="meta">Made with EverTask</p></body></html>';
+}
+function printPlan(){
+  if(!currentPlan){ toast('Create a planner first — then Print works here ✓'); return; }
+  var w = null;
+  try { w = window.open('', '_blank'); } catch(e){}
+  if(w){
+    w.document.open(); w.document.write(printableHtml(currentPlan)); w.document.close(); w.focus();
+    setTimeout(function(){ try { w.print(); } catch(e){} }, 350);
+    toast('🖨️ Print view opened');
+  } else {
+    downloadBlob(new Blob([printableHtml(currentPlan)], {type:'text/html'}), 'EverTask-Planner.html');
+    toast('🖨️ Printable file downloaded ✓');
+  }
+}
+function downloadBlob(blob, name){
+  function viaDataUrl(){
+    try {
+      var r = new FileReader();
+      r.onload = function(){ var a=document.createElement('a'); a.href=r.result; a.download=name; document.body.appendChild(a); a.click(); a.remove(); };
+      r.readAsDataURL(blob);
+    } catch(e){ toast('Download is blocked in this view — Copy works instead'); }
+  }
+  try {
+    if(!URL.createObjectURL) throw new Error('no blob urls');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ try { URL.revokeObjectURL(a.href); } catch(e){} a.remove(); }, 400);
+  } catch(e){ viaDataUrl(); }
+}
+function downloadPlan(){
+  if(!currentPlan){ toast('Create a planner first — then Download works here ✓'); return; }
+  downloadBlob(new Blob([printableHtml(currentPlan)], {type:'text/html'}), 'EverTask-Planner.html');
+  toast('⬇️ Beautiful planner file downloaded — open it in any browser ✓');
+}
+function copyPlan(){
+  if(!currentPlan){ toast('Create a planner first — then Copy works here ✓'); return; }
+  var txt = planText(currentPlan);
+  function done(){ toast('📋 Plan copied — paste it anywhere!'); }
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(done).catch(function(){ fallbackCopy(txt, done); });
+  } else fallbackCopy(txt, done);
+}
+function fallbackCopy(txt, done){
+  var ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch(e){ toast('Copy blocked here — use Download instead'); }
+  ta.remove();
+}
+
+/* ============ DESKMATE ============ */
+var MATE_TYPES = [['🐼','Panda'],['🧸','Bear'],['🦉','Owl'],['🐱','Cat'],['🦊','Fox'],['🤖','Bot']];
+function renderMate(){
+  $('mateEmoji').textContent = mate.type;
+  $('mateNameTag').textContent = mate.name || 'Chotu';
+  var pv = $('matePreview'); if(pv) pv.textContent = mate.type;
+  var ni = $('mateNameInput'); if(ni && document.activeElement !== ni) ni.value = mate.name || '';
+  renderMatePickerInto('matePicker', 'pickMate');
+  renderMatePickerInto('obMateGrid', 'pickObMate');
+}
+function renderMatePickerInto(elId, fn){
+  var el = $(elId); if(!el) return;
+  el.innerHTML = MATE_TYPES.map(function(m){
+    return '<div class="mateCard'+(mate.type===m[0]?' sel':'')+'" data-t="'+m[0]+'" onclick="'+fn+'(this.dataset.t)">'+m[0]+'<span>'+m[1]+'</span></div>';
+  }).join('');
+}
+function renderMatePicker(){ renderMate(); }
+function pickMate(t){ mate.type = t; renderMate(); mateSay('Yay, pick me! 🥺'); }
+function pickObMate(t){ mate.type = t; renderMate(); var pv=$('obMatePreview'); if(pv) pv.textContent = t; var talk=$('obMateTalk'); if(talk) talk.textContent = '1… 2… 3… push-ups done! Your turn to flex your brain! 💪'; }
+function saveMate(){ var ni=$('mateNameInput'); if(ni) mate.name = ni.value.trim() || 'Chotu'; store.set('et4_mate', JSON.stringify(mate)); renderMate(); mateSay('I am '+(mate.name||'Chotu')+'! Let us study together! 🎉'); toast('🧸 Deskmate saved'); }
+var bubbleTimer = null;
+function mateSay(text, ms){
+  var b = $('mateBubble'); if(!b) return;
+  b.textContent = text; b.classList.add('show');
+  clearTimeout(bubbleTimer); bubbleTimer = setTimeout(function(){ b.classList.remove('show'); }, ms || 3200);
+}
+function mateClick(){
+  var lines = ['You have got this! 💪','Teach me something new? 🎓','I am watching you shine! ✨','Five more minutes, champion!'];
+  mateSay(lines[Math.floor(Math.random()*lines.length)]);
+}
+/* eyes follow cursor (gentle, transform-only on the emoji) */
+document.addEventListener('mousemove', function(e){
+  var dm = $('deskmate'); if(!dm || dm.style.display==='none') return;
+  var r = dm.getBoundingClientRect();
+  var dx = Math.max(-3, Math.min(3, (e.clientX - (r.left + r.width/2)) / 80));
+  var dy = Math.max(-2, Math.min(2, (e.clientY - (r.top + r.height/2)) / 80));
+  var em = $('mateEmoji'); if(em) em.style.transform = 'translate('+dx+'px,'+dy+'px)';
+});
+
+/* ============ TEACH MODE ============ */
+var recognition = null, listening = false;
+function toggleMic(){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var btn = $('micBtn'), state = $('micState');
+  if(!SR){ state.textContent = '🎤 Voice is not supported in this browser — typing works perfectly too! (Chrome supports speaking.)'; return; }
+  if(listening){ try { recognition.stop(); } catch(e){} return; }
+  recognition = new SR();
+  recognition.lang = profile.lang==='hi' ? 'hi-IN' : profile.lang==='hinglish' ? 'hi-IN' : 'en-IN';
+  recognition.interimResults = true; recognition.continuous = true;
+  var finalText = $('teachText').value ? $('teachText').value + ' ' : '';
+  recognition.onresult = function(e){
+    var interim = '';
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    $('teachText').value = finalText + interim;
+    state.textContent = '🎧 ' + (mate.name||'Your deskmate') + ' is listening… keep teaching!';
+  };
+  recognition.onend = function(){ listening = false; btn.textContent = '🎤 Speak — Deskmate is Listening'; state.textContent = 'Stopped. Review your words, then tap “Check My Explanation”.'; };
+  recognition.onerror = function(ev){ state.textContent = 'Mic note: ' + ev.error + ' — you can type instead!'; };
+  try { recognition.start(); } catch(e){ state.textContent = 'Could not start the mic — typing works great too!'; return; }
+  listening = true; btn.textContent = '⏹️ Stop Listening';
+  mateSay('I am all ears! Teach me! 👂✨', 4000);
+}
+function localTeach(text){
+  var words = text.trim().split(/\s+/).filter(Boolean).length;
+  var lower = text.toLowerCase();
+  var checks = [
+    {ok: words>=60, good:'You explained in good detail ('+words+' words) — depth helps it stick!', bad:'Explain a little more — aim for 60+ words so your brain organises the idea.'},
+    {ok: /(is|are|means|refers to|defined as)/.test(lower), good:'You gave a clear definition — teachers always start there. 👏', bad:'Start with a simple definition: what IS this, in your own words?'},
+    {ok: /(for example|example|e\.g\.|like when|suppose|imagine)/.test(lower), good:'You used an example or analogy — that makes ideas unforgettable!', bad:'Add one real-life example or analogy.'},
+    {ok: /(because|so that|therefore|hence|reason|due to)/.test(lower), good:'You explained WHY, not just WHAT — deep understanding! 🧠', bad:'Add a “because…” — explain WHY it happens.'},
+    {ok: /(first|then|next|after|step)/.test(lower), good:'You broke it into steps — easy to follow!', bad:'Try ordering it: first… then… finally…'},
+    {ok: !/(always happens|never ever|everything is|nothing can)/.test(lower), good:'You avoided over-general claims — careful, accurate thinking!', bad:'Careful with “always/never” — science usually has exceptions. Re-check that claim.'}
+  ];
+  var passed = checks.filter(function(c){ return c.ok; });
+  return {
+    score: Math.round(passed.length / checks.length * 100),
+    praise: passed.map(function(c){ return '• ' + c.good; }),
+    fixes: checks.filter(function(c){ return !c.ok; }).map(function(c){ return '• ' + c.bad; })
+  };
+}
+function analyzeTeaching(){
+  var topic = $('teachTopic').value.trim() || 'this topic';
+  var text = $('teachText').value.trim();
+  var fb = $('teachFeedback');
+  if(text.split(/\s+/).length < 8){ fb.innerHTML = '<div class="fbCard">🙈 Teach me a little more first! Explain “'+esc(topic)+'” in at least a few sentences — speak or type.</div>'; mateSay('Teach me more! I am curious! 🥺'); return; }
+  fb.innerHTML = '<div class="fbCard"><span class="tool"><span class="spin"></span> ' + esc(mate.name||'Your deskmate') + ' is thinking…</span></div>';
+  mateSay('Hmm, let me think about what you taught me… 🤔', 3200);
+  var local = localTeach(text);
+  function show(nimText){
+    var html = '<div class="fbCard"><div class="scoreRing" style="background:conic-gradient(var(--teal) '+local.score+'%, rgba(255,255,255,.09) 0)"><i>'+local.score+'%</i></div>'
+      + '<div style="text-align:center;font-weight:800">'+esc(mate.name||'Deskmate')+'’s Understanding Score</div>\n\n';
+    if(nimText) html += esc(nimText);
+    else html += '🌟 WHAT YOU NAILED:\n' + (local.praise.join('\n') || '• You tried teaching it — that is the hardest step!')
+      + '\n\n🔍 LET’S POLISH:\n' + (local.fixes.join('\n') || '• Honestly? Strong explanation. Say it once more, faster!')
+      + '\n\n❓ MY QUESTION FOR YOU:\n• Can you explain “'+esc(topic)+'” in just ONE sentence, without looking?';
+    fb.innerHTML = html + '</div>';
+    if(local.score >= 70){ mateSay('Wow, I actually understand now! Great teacher! 🎉', 4500); }
+    else mateSay('Good start! Polish those bits and teach me again!', 4500);
+  }
+  if(getKey()){
+    nimChat([
+      {role:'system', content:'You are a cute deskmate plushie just taught a topic by the student (Feynman technique). Reply with exactly 4 short sections: "PRAISE:", "TO CHECK:" (real mistakes or confusing parts, kind and accurate; if none, say the facts look right), "MISSING:", "MY QUESTION:". Under 180 words, warm.'},
+      {role:'user', content:'Topic: '+topic+'\nStudent explanation: '+text}
+    ]).then(function(r){ show(r); }).catch(function(){ show(null); });
+  } else show(null);
+}
+
+/* ============ SETTINGS ============ */
+function refreshApiLabel(){ var k=getKey(); var b=$('apiKeyBtn'); if(b) b.textContent = k ? '🔑 API Connected ✓' : '🔑 API Key'; var s=$('apiSideLabel'); if(s) s.textContent = k ? ('Connected: '+k.slice(0,9)+'…'+k.slice(-4)) : 'Enter NVIDIA NIM API key'; }
+function openSettings(){ refreshApiLabel(); $('apiKey').value = getKey(); $('modelSel').value = getModel(); $('settingsModal').classList.add('open'); }
+function closeSettings(){ $('settingsModal').classList.remove('open'); }
+$('settingsModal').addEventListener('click', function(e){ if(e.target.id==='settingsModal') closeSettings(); });
+$('apiKey').addEventListener('input', function(e){
+  var k = e.target.value.trim();
+  if(k) store.set('et4_key', k); else store.del('et4_key');
+  refreshApiLabel();
+  var st=$('apiState'); if(st && k) st.textContent='✓ Key saved on this device. Tap Test to verify the connection.';
+});
+$('modelSel').addEventListener('change', function(e){ store.set('et4_model', e.target.value); });
+function clearKey(){ store.del('et4_key'); $('apiKey').value=''; $('apiState').textContent = 'Key removed.'; refreshApiLabel(); }
+function testKey(){
+  if(!getKey()){ $('apiState').textContent = 'Paste a key first — it saves automatically as you type.'; return; }
+  $('apiState').textContent = '⏳ Checking connection…';
+  nimChat([{role:'user', content:'Reply with exactly: OK'}])
+    .then(function(r){ $('apiState').textContent = r ? '✅ Connected — you are ready to go!' : '❌ No reply. Check the key and model.'; })
+    .catch(function(){ $('apiState').textContent = '❌ Could not connect. Check the key and try again.'; });
+}
+
+/* ============ ONBOARDING ============ */
+function obGo(n){
+  [1,2,3,4].forEach(function(i){ var el = $('ob'+i); if(el) el.style.display = (i===n ? '' : 'none'); });
+  if(n===3) renderMate();
+}
+function openOnboarding(){ $('onboarding').classList.add('open'); obGo(1); }
+function closeOnboarding(){ $('onboarding').classList.remove('open'); store.set('et4_seen','1'); }
+$('onboarding').addEventListener('click', function(e){ if(e.target.id==='onboarding') closeOnboarding(); });
+function saveProfileStep(){
+  profile = { name: $('pfName').value.trim(), cls: $('pfClass').value, hours: $('pfHours').value, lang: $('pfLang').value, goal: $('pfGoal').value.trim() };
+  store.set('et4_profile', JSON.stringify(profile));
+  obGo(3);
+}
+function createFirstPlan(){
+  closeOnboarding();
+  quick('Make a 7-day study plan for Class '+profile.cls+' Science NCERT, '+profile.hours+' hours per day');
+}
+function finishOnboarding(){
+  store.set('et4_mate', JSON.stringify(mate));
+  renderMate();
+  $('obSummary').innerHTML = 'Nice to meet you' + (profile.name ? ', <b>'+esc(profile.name)+'</b>' : '') + '! 🎉<br>Class '+esc(profile.cls)+' • '+profile.hours+' hrs/day • '+(profile.lang==='hi'?'हिन्दी':profile.lang==='hinglish'?'Hinglish':'English')
+    + '<br>🧸 Deskmate: <b>'+esc(mate.name||'Chotu')+'</b>' + (profile.goal ? '<br>🎯 Goal: '+esc(profile.goal) : '');
+  obGo(4);
+}
+
+/* ============ BRAIN ============ */
+var SYS = 'You are Ever, AI assistant in EverTask, an AI study planner. Be concise, practical, warm. If a planner was built, refer to it.';
+function demoReply(text){
+  var t = text.toLowerCase();
+  var nm = profile.name ? (' '+profile.name) : '';
+  if(/time|today|date/.test(t)) return 'Right now it is '+nowStr()+'. Every plan I make starts from today, so it always fits your real schedule.';
+  if(/price/.test(t)) return 'EverTask is free to start — create planners, track progress, and save everything on this device.';
+  if(/^(hi|hello|hey)/.test(t)) return 'Hey'+nm+'! 👋 Tell me your class, subject and days — like “7 days, Class 10 Science, 2 hours a day” — and I will build your personal plan.';
+  if(/teach|deskmate/.test(t)) return 'Open the 🧸 Deskmate tab and teach me a topic out loud! Explaining is the fastest way to learn — I will praise you, catch mistakes, and ask questions.';
+  return 'Tell me three things and I will build it instantly: your class, the subject, and how many days you have. Example: “Make a 7-day plan for Class 10 Science, 2 hours per day.”';
+}
+function isPlanRequest(t){
+  if(/plan|planner|timetable|time[- ]?table|schedule|routine|roadmap|syllabus|revision strateg|study strateg/.test(t)) return true;
+  var hasSubject = /science|maths|mathematics|physics|chemistry|biology|social|english|hindi|sst|history|geography/.test(t) || /class\s*(9|10|11|12)/.test(t);
+  var hasExam = /exam|board|pre[- ]?board|test|paper|viva/.test(t);
+  var hasTime = /(\d+\s*(-| )?\s*days?|\d+\s*weeks?|tomorrow|tonight|in \d+|next week|this week|survival|last minute|urgent)/.test(t);
+  var wantsHelp = /prepare|preparation|study|revise|revision|cover|finish|complete|help|weak|start|how (to|do|should)|guide|tips for/.test(t);
+  if(hasSubject && hasTime) return true;
+  if(hasExam && (hasTime || wantsHelp)) return true;
+  if(hasSubject && wantsHelp && /day|week|hour|hr/.test(t)) return true;
+  if(/survival/.test(t) && hasSubject) return true;
+  return false;
+}
+async function send(){
+  var inp = $('input'), text = inp.value.trim();
+  if(!text) return;
+  inp.value = ''; inp.style.height = 'auto';
+  addMsg('user', text); inp.focus();
+  var lower = text.toLowerCase();
+  var wantsPlan = isPlanRequest(lower);
+  if(wantsPlan){
+    var plan = buildPlan(parseReq(text));
+    try { streamPlan(plan).catch(function(){ renderPlanInstant(plan); }); } catch(e){ renderPlanInstant(plan); }
+    setTimeout(function(){
+      if(currentPlan && currentPlan.id===plan.id && !document.querySelector('.calCell')){
+        renderPlanInstant(plan);
+      }
+    }, 4000);
+    var reply = 'Done ✓ Your '+plan.title+' is building live in the 📅 Live Planner tab →\n\n📚 '+plan.book+'\n📖 '+plan.total+' real chapters across '+plan.days.length+' days ('+plan.hours+' hrs/day, from today)\n☑️ Tap any date on the calendar for that day’s tasks, and tick them off as you go.\n\nIt is saved under 🧩 Artifacts so you can reopen it anytime.';
+    addMsg('bot', reply);
+    if(getKey()){
+      nimChat([
+        {role:'system', content: SYS+' Time: '+nowStr()},
+        {role:'user', content: text+' — Plan chapters: '+plan.days.reduce(function(a,d){ return a.concat(d.chapters.map(function(c){return c.chapter;})); },[]).join(', ')+'. Give 4 short practical tips, under 100 words.'}
+      ]).then(function(tips){ if(tips) addMsg('bot', '💡 Personal tips for you:\n' + tips); }).catch(function(){});
+    }
+    webSearch('NCERT Class '+plan.cls+' '+plan.sub+' book chapters').catch(function(){});
+    return;
+  }
+  var wantsSearch = /search|web|latest|news|current affairs/.test(lower);
+  var tid = addTool(getKey() ? 'Thinking…' : 'Thinking… one moment');
+  var web = null;
+  if(wantsSearch) web = await webSearch(text);
+  var reply = null;
+  if(getKey()){
+    try {
+      var msgs = [{role:'system', content: SYS+'\nTime: '+nowStr() + (web && web.results && web.results.length ? '\n\nWEB RESULTS:\n'+web.results.map(function(x){ return '['+x.source+'] '+x.title+' — '+(x.snippet||'')+' '+x.url; }).join('\n') : '')}];
+      curChat().msgs.slice(-8).forEach(function(m){ msgs.push({role: m.role==='user' ? 'user' : 'assistant', content: m.text}); });
+      reply = await nimChat(msgs);
+    } catch(e){ reply = null; }
+  }
+  if(reply && reply.length > 1600 && /day 1|day-1|DAY 1/.test(reply) && !wantsPlan){
+    var autoPlan = buildPlan(parseReq(text+' plan in 5 days'));
+    try { streamPlan(autoPlan).catch(function(){ renderPlanInstant(autoPlan); }); } catch(e){ renderPlanInstant(autoPlan); }
+    reply = 'I turned that into a proper calendar plan for you 📅 — it is building in the Live Planner tab →\n\nHere is the short version:\n' + reply.slice(0, 900) + '\n…(full day-by-day plan is on your calendar)';
+  }
+  if(!reply){
+    reply = demoReply(text);
+    if(web && web.results && web.results.length)
+      reply = 'Here is what I found 🌐\n\n' + web.results.slice(0,4).map(function(r){ return '• '+r.title+' — '+String(r.snippet||'').replace(/<[^>]+>/g,'').slice(0,150); }).join('\n');
+  }
+  killEl(tid);
+  addMsg('bot', reply);
+}
+async function playDemo(){
+  var plan = buildPlan(parseReq('Make a 5-day study plan for Class 10 Science NCERT, 2 hours per day'));
+  toast('▶️ Watch Ever write each day, fly it up, and slam it onto the calendar!');
+  await streamPlan(plan);
+  addMsg('bot', 'That was the planner animation demo 🎬 Now try your own: tell me your class, subject and days!');
+}
+
+/* ============ INIT ============ */
+function init(){
+  var st=document.getElementById('selfTest'); if(st) st.textContent='✅ Page loaded — buttons are ready. Tap Launch below.';
+  buildLandingCal();
+  var clock = $('clock'); if(clock) clock.textContent = '🕒 ' + nowStr();
+  if(chats.length){ currentId = chats[0].id; } else { currentId = 'c'+Date.now(); chats.unshift({id:currentId, title:'New chat', msgs:[]}); persist(); }
+  renderChatList(); renderMsgs(); renderMate(); updateArtCount(); try{refreshApiLabel()}catch(e){}
+  if(location.hash === '#app') enterApp();
+}
+init();
+</script>
+</body>
+</html>
